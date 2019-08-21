@@ -9,7 +9,7 @@ setup(
     author='Andrii Matiiash',
     author_email='andmati743@gmail.com',
     url='https://github.com/AverHLV/browseapi',
-    download_url='',
+    download_url='https://github.com/AverHLV/browseapi/archive/0.10.tar.gz',
     keywords=['ASYNC', 'BROWSE API', 'CLIENT'],
 
     install_requires=[
