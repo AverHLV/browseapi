@@ -1,0 +1,9 @@
+image: averhlv/browseapi:latest
+
+stages:
+    - test
+
+tests:
+    stage: test
+    script:
+        - bash ./tests.sh
