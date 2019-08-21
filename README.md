@@ -1,6 +1,6 @@
 # Browse API client
 
-[![Documentation Status](https://readthedocs.org/projects/browseapi/badge/?version=latest)](https://browseapi.readthedocs.io/en/latest/?badge=latest)
+![coverage](https://img.shields.io/codecov/c/github/AverHLV/browseapi.svg) ![build_status](https://img.shields.io/gitlab/pipeline/AverHLV/browseapi/dev.svg) [![Documentation Status](https://readthedocs.org/projects/browseapi/badge/?version=latest)](https://browseapi.readthedocs.io/en/latest/?badge=latest)
 
 This package is a Python client for eBay Browse API.
 It is asynchronous and designed to send a large number of requests by
