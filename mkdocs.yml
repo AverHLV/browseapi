@@ -1,0 +1,7 @@
+site_name: Browse API client documentation
+theme: readthedocs
+repo_url: https://github.com/AverHLV/browseapi
+remote_branch: dev
+nav:
+    - Home: index.md
+    - Methods: methods.md
