@@ -1,11 +1,17 @@
 from distutils.core import setup
 
+with open('README.md') as f:
+    long_description = f.read()
+
+
 setup(
     name='browseapi',
     packages=['browseapi'],
     version='0.10',
     license='MIT',
     description='eBay Browse API Python client',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Andrii Matiiash',
     author_email='andmati743@gmail.com',
     url='https://github.com/AverHLV/browseapi',
