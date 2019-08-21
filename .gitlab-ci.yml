@@ -5,5 +5,7 @@ stages:
 
 tests:
     stage: test
+    only:
+        - dev
     script:
         - bash ./tests.sh
