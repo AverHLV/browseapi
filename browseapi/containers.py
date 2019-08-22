@@ -69,18 +69,18 @@ class ItemSummary(BrowseAPIBaseContainer):
     """
 
     def __init__(self, item_summary: dict):
-        self.adultOnly = item_summary['adultOnly']
-        self.buyingOptions = item_summary['buyingOptions']
-        self.conditionId = item_summary['conditionId']
+        self.adultOnly = item_summary.get('adultOnly')
+        self.buyingOptions = item_summary.get('buyingOptions')
+        self.conditionId = item_summary.get('conditionId')
         self.image = Image(item_summary['image'])
-        self.itemHref = item_summary['itemHref']
-        self.itemId = item_summary['itemId']
+        self.itemHref = item_summary.get('itemHref')
+        self.itemId = item_summary.get('itemId')
         self.itemLocation = ItemLocationImpl(item_summary['itemLocation'])
-        self.itemWebUrl = item_summary['itemWebUrl']
+        self.itemWebUrl = item_summary.get('itemWebUrl')
         self.price = ConvertedAmount(item_summary['price'])
         self.seller = Seller(item_summary['seller'])
         self.shortDescription = item_summary.get('shortDescription')
-        self.title = item_summary['title']
+        self.title = item_summary.get('title')
         self.unitPricingMeasure = item_summary.get('unitPricingMeasure')
 
         for key in ('bidCount',
@@ -143,7 +143,7 @@ class Category(BrowseAPIBaseContainer):
     """
 
     def __init__(self, category: dict):
-        self.categoryId = category['categoryId']
+        self.categoryId = category.get('categoryId')
 
 
 class CompatibilityProperty(BrowseAPIBaseContainer):
@@ -164,8 +164,8 @@ class ConvertedAmount(BrowseAPIBaseContainer):
     """
 
     def __init__(self, current_price: dict):
-        self.currency = current_price['currency']
-        self.value = current_price['value']
+        self.currency = current_price.get('currency')
+        self.value = current_price.get('value')
 
         for key in 'convertedFromCurrency', 'convertedFromValue':
             setattr(self, key, current_price.get(key))
@@ -189,9 +189,7 @@ class ItemLocationImpl(BrowseAPIBaseContainer):
     """
 
     def __init__(self, location: dict):
-        self.country = location['country']
-
-        for key in 'addressLine1', 'addressLine2', 'city', 'county', 'stateOrProvince', 'postalCode':
+        for key in 'addressLine1', 'addressLine2', 'city', 'country', 'county', 'stateOrProvince', 'postalCode':
             setattr(self, key, location.get(key))
 
 
@@ -202,9 +200,7 @@ class MarketingPrice(BrowseAPIBaseContainer):
     """
 
     def __init__(self, price: dict):
-        self.discountPercentage = price.get('discountPercentage')
-
-        for key in 'currency', 'value':
+        for key in 'discountPercentage', 'currency', 'value':
             setattr(self, key, price.get(key))
 
         if 'discountAmount' in price:
@@ -349,14 +345,15 @@ class ErrorDetailV3(BrowseAPIBaseContainer):
     """
 
     def __init__(self, warning: dict):
-        self.category = warning['category']
-        self.domain = warning['domain']
-        self.errorId = warning['errorId']
-        self.message = warning['message']
-
-        for key in 'inputRefIds', 'longMessage', 'outputRefIds', 'subdomain':
-            if key in warning:
-                setattr(self, key, warning[key])
+        for key in ('category',
+                    'domain',
+                    'errorId',
+                    'message',
+                    'inputRefIds',
+                    'longMessage',
+                    'outputRefIds',
+                    'subdomain'):
+            setattr(self, key, warning.get(key))
 
         if 'parameters' in warning:
             self.parameters = [ErrorParameterV3(parameter) for parameter in warning['parameters']]
@@ -370,5 +367,4 @@ class ErrorParameterV3(BrowseAPIBaseContainer):
 
     def __init__(self, parameter: dict):
         for key in 'name', 'value':
-            if key in parameter:
-                setattr(self, key, parameter[key])
+            setattr(self, key, parameter.get(key))
