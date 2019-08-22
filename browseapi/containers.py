@@ -20,13 +20,15 @@ class BrowseAPIResponse(BrowseAPIBaseContainer):
             self.limit = response['limit']
             self.offset = response['offset']
             self.total = response['total']
-            self.itemSummaries = [ItemSummary(item) for item in response['itemSummaries']]
 
             for key in 'next', 'prev':
                 setattr(self, key, response.get(key))
 
             if 'refinement' in response:
                 self.refinement = Refinement(response['refinement'])
+
+            if 'itemSummaries' in response:
+                self.itemSummaries = [ItemSummary(item) for item in response['itemSummaries']]
 
         if 'warnings' in response:
             self.warnings = [ErrorDetailV3(warning) for warning in response['warnings']]
