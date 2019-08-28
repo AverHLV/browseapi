@@ -27,21 +27,7 @@ Public method for running API requests.
 
 * method: Browse API method name in lowercase
 * params: list of params dictionaries for every request
-* pass_errors: interrupt loop when exception got or not
-* logger: user`s logger instance for logging passed exceptions
+* pass_errors: exceptions in the tasks are treated the same as successful results, bool
 * return: list of responses
 
-Pass_errors set to False by default. You can log requests exceptions
-with your own logger:
-```python
-import logging
-from browseapi import BrowseAPI
-
-logger = logging.getLogger(__file__)
-
-app_id = '<your_app_id>'
-cert_id = '<your_cert_id>'
-
-api = BrowseAPI(app_id, cert_id)
-responses = api.execute('search', [{'q': 'drone'}], pass_errors=True, logger=logger)
-```
+Pass_errors set to False by default.

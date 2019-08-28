@@ -74,13 +74,9 @@ class ItemSummary(BrowseAPIBaseContainer):
         self.adultOnly = item_summary.get('adultOnly')
         self.buyingOptions = item_summary.get('buyingOptions')
         self.conditionId = item_summary.get('conditionId')
-        self.image = Image(item_summary['image'])
         self.itemHref = item_summary.get('itemHref')
         self.itemId = item_summary.get('itemId')
-        self.itemLocation = ItemLocationImpl(item_summary['itemLocation'])
         self.itemWebUrl = item_summary.get('itemWebUrl')
-        self.price = ConvertedAmount(item_summary['price'])
-        self.seller = Seller(item_summary['seller'])
         self.shortDescription = item_summary.get('shortDescription')
         self.title = item_summary.get('title')
         self.unitPricingMeasure = item_summary.get('unitPricingMeasure')
@@ -94,6 +90,18 @@ class ItemSummary(BrowseAPIBaseContainer):
                     'itemGroupHref',
                     'itemGroupType'):
             setattr(self, key, item_summary.get(key))
+
+        if 'price' in item_summary:
+            self.price = ConvertedAmount(item_summary['price'])
+
+        if 'image' in item_summary:
+            self.image = Image(item_summary['image'])
+
+        if 'itemLocation' in item_summary:
+            self.itemLocation = ItemLocationImpl(item_summary['itemLocation'])
+
+        if 'seller' in item_summary:
+            self.seller = Seller(item_summary['seller'])
 
         if 'additionalImages' in item_summary:
             self.additionalImages = [Image(image) for image in item_summary['additionalImages']]
