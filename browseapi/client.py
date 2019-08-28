@@ -2,8 +2,6 @@ import asyncio
 
 from aiohttp import client_exceptions, ClientSession, ClientTimeout
 
-from typing import Optional
-from logging import Logger
 from base64 import b64encode
 from urllib.parse import urlencode
 
@@ -91,6 +89,7 @@ class BrowseAPI(object):
         self._possible_requests = None
 
         self._responses = []
+        self._timeout = ClientTimeout(total=TIMEOUT)
 
         self._oauth_headers = {
             'Authorization': 'Basic {}'.format(str(b64encode((app_id + ':' + cert_id).encode('utf8')))[2:-1]),
@@ -122,6 +121,14 @@ class BrowseAPI(object):
 
         if len(ctx_header):
             self._headers['X-EBAY-C-ENDUSERCTX'] = ctx_header
+
+    async def _create_session(self):
+        """ Create requests session """
+
+        if self._session is not None:
+            await self._session.close()
+
+        self._session = ClientSession(headers=self._headers, timeout=self._timeout)
 
     async def _request(self, uri: str, request_type=0, data=None, oauth=False) -> dict:
         """
@@ -156,7 +163,7 @@ class BrowseAPI(object):
         except client_exceptions.InvalidURL:
             raise exceptions.BrowseAPIInvalidUri('Invalid uri', uri)
 
-        except asyncio.TimeoutError:
+        except client_exceptions.ServerTimeoutError:
             raise exceptions.BrowseAPITimeoutError('Timeout occurred', uri)
 
         except client_exceptions.ClientConnectorError:
@@ -265,22 +272,16 @@ class BrowseAPI(object):
         self._possible_requests = expires_in // TIMEOUT
         self._headers['Authorization'] = self._headers['Authorization'].format(app_token)
 
-        # create new session with oauth token
-
-        if self._session is not None:
-            await self._session.close()
-
-        self._session = ClientSession(headers=self._headers, timeout=ClientTimeout(total=TIMEOUT))
-
-    async def _send_requests(self, method: str, params: list, pass_errors: bool, logger: Optional[Logger]) -> None:
+    async def _send_requests(self, method: str, params: list, pass_errors: bool) -> None:
         """
-        Send requests by given method
+        Send async requests
 
         :param method: Browse API method name in lowercase
         :param params: list of params dictionaries for every request
-        :param pass_errors: interrupt loop when exception got or not
-        :param logger: user`s logger instance for logging passed exceptions
+        :param pass_errors: exceptions in the tasks are treated the same as successful results, bool
         """
+
+        self._responses = []
 
         # load specified api method
 
@@ -290,31 +291,29 @@ class BrowseAPI(object):
         method_name = method
         method = getattr(self, '_' + method)
 
-        # send requests
-
-        self._responses = []
-        self._oauth_session = ClientSession(headers=self._oauth_headers, timeout=ClientTimeout(total=TIMEOUT))
-
         try:
+            # get oauth token
+
+            self._oauth_session = ClientSession(headers=self._oauth_headers, timeout=self._timeout)
             await self._send_oauth_request()
+            await self._create_session()
+
+            # send requests
+
             params = self._split_list(params, self._possible_requests)
 
             for part_number, param_part in enumerate(params):
-                for param in param_part:
-                    try:
-                        self._responses.append(BrowseAPIResponse(await method(**param), method_name))
+                responses = await asyncio.gather(
+                    *[method(**param) for param in param_part],
+                    return_exceptions=pass_errors
+                )
 
-                    except exceptions.BrowseAPIError as e:
-                        if logger is not None:
-                            logger.warning('{0}, params: {1}'.format(e, param))
-
-                        if pass_errors:
-                            continue
-
-                        raise e
+                self._responses += [BrowseAPIResponse(response, method_name) if isinstance(response, dict) else response
+                                    for response in responses]
 
                 if part_number != len(params):
                     await self._send_oauth_request()
+                    await self._create_session()
 
         finally:
             await self._oauth_session.close()
@@ -322,22 +321,21 @@ class BrowseAPI(object):
             if self._session is not None:
                 await self._session.close()
 
-    def execute(self, method: str, params: list, pass_errors=False, logger=None) -> list:
+    def execute(self, method: str, params: list, pass_errors=False) -> list:
         """
         Start event loop and make requests
 
         :param method: Browse API method name in lowercase
         :param params: list of params dictionaries for every request
-        :param pass_errors: interrupt loop when exception got or not
-        :param logger: user`s logger instance for logging passed exceptions
+        :param pass_errors: exceptions in the tasks are treated the same as successful results, bool
         :return: list of responses
         """
 
         loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
         try:
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(self._send_requests(method, params, pass_errors, logger))
+            loop.run_until_complete(self._send_requests(method, params, pass_errors))
 
         finally:
             loop.close()
@@ -360,6 +358,6 @@ class BrowseAPI(object):
 
     @staticmethod
     def _split_list(array: list, n: int):
-        """ Split list into n parts """
+        """ Split list into parts with n elements """
 
         return [array[i:i + n] for i in range(0, len(array), n)]
