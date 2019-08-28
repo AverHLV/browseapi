@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 from . import exceptions
 from .containers import BrowseAPIResponse
 
-TIMEOUT = 10
+TIMEOUT = 60
 
 
 class BrowseAPI(object):
