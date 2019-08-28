@@ -1,4 +1,6 @@
 site
 dist
+build
+browseapi.egg-info
 secret.json
 run_tests.py
