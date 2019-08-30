@@ -18,6 +18,10 @@ class BrowseAPI(object):
     _auth_uri = 'https://api.ebay.com/identity/v1/oauth2/token'
     _search_uri = _uri + '/item_summary/search?'
     _search_by_image_uri = _uri + '/item_summary/search_by_image?'
+    _get_item_uri = _uri + '/item/{item_id}?'
+    _get_item_by_legacy_id_uri = _uri + '/item/get_item_by_legacy_id?'
+    _get_items_by_item_group_uri = _uri + '/item/get_items_by_item_group?'
+    _check_compatibility_uri = _uri + '/item/{item_id}/check_compatibility'
 
     # Client Credential Grant Type
 
@@ -26,7 +30,11 @@ class BrowseAPI(object):
 
     supported_methods = (
         'search',
-        'search_by_image'
+        'search_by_image',
+        'get_item',
+        'get_item_by_legacy_id',
+        'get_items_by_item_group',
+        'check_compatibility'
     )
 
     marketplaces = (
@@ -256,6 +264,65 @@ class BrowseAPI(object):
 
         uri = self._search_by_image_uri + self._encode_params(locals(), ('self', 'image'))
         return await self._request(uri, request_type=1, data={'image': image})
+
+    async def _get_item(self,
+                        item_id: str,
+                        fieldgroups=None) -> dict:
+        """
+        Browse API getItem method
+
+        :param item_id: eBay RESTful identifier of an item
+        :param fieldgroups: lets you control what is returned in the response
+        :return: json response
+        """
+
+        uri = self._get_item_uri.format(item_id=item_id) + self._encode_params(locals(), ('self', 'item_id'))
+        return await self._request(uri)
+
+    async def _get_item_by_legacy_id(self,
+                                     legacy_item_id: str,
+                                     legacy_variation_id=None,
+                                     legacy_variation_sku=None,
+                                     fieldgroups=None) -> dict:
+        """
+        Browse API getItemByLegacyId method
+
+        :param legacy_item_id: eBay legacy item ID
+        :param legacy_variation_id: legacy item ID of a specific item in an item group
+        :param legacy_variation_sku: legacy SKU of the item
+        :param fieldgroups: lets you control what is returned in the response
+        :return: json response
+        """
+
+        uri = self._get_item_by_legacy_id_uri + self._encode_params(locals(), ('self',))
+        return await self._request(uri)
+
+    async def _get_items_by_item_group(self,
+                                       item_group_id: str) -> dict:
+        """
+        Browse API getItemsByItemGroup method
+
+        :param item_group_id: identifier of the item group to return
+        :return: json response
+        """
+
+        uri = self._get_items_by_item_group_uri + self._encode_params(locals(), ('self',))
+        return await self._request(uri)
+
+    async def _check_compatibility(self,
+                                   item_id: str,
+                                   compatibility_properties: list):
+        """
+        Browse API checkCompatibility method
+
+        :param item_id: eBay RESTful identifier of an item
+        :param compatibility_properties: list of attribute name/value pairs used to define a specific product, like:
+            [{'name': name, 'value': value}, ]
+        :return: json response
+        """
+
+        uri = self._check_compatibility_uri.format(item_id=item_id)
+        return await self._request(uri, request_type=1, data={'compatibilityProperties': compatibility_properties})
 
     async def _send_oauth_request(self):
         """ Send OAuth request for getting application token """
