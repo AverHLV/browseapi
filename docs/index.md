@@ -14,6 +14,10 @@ Only these methods are now implemented (names changed to lowercase notation):
 
 * [search](https://developer.ebay.com/api-docs/buy/browse/resources/item_summary/methods/search)
 * [search_by_image](https://developer.ebay.com/api-docs/buy/browse/resources/search_by_image/methods/searchByImage)
+* [get_item](https://developer.ebay.com/api-docs/buy/browse/resources/item/methods/getItem)
+* [get_item_by_legacy_id](https://developer.ebay.com/api-docs/buy/browse/resources/item/methods/getItemByLegacyId)
+* [get_items_by_item_group](https://developer.ebay.com/api-docs/buy/browse/resources/item/methods/getItemsByItemGroup)
+* [check_compatibility](https://developer.ebay.com/api-docs/buy/browse/resources/item/methods/checkCompatibility)
 
 ## Quickstart
 Create a BrowseAPI instance with your application id (app_id)
@@ -44,6 +48,12 @@ and `'eb_cert_id'` to the `browseapi/tests` directory,
 then run a command from the parent browseapi directory:
 
 `python -m unittest browseapi.tests.test_client`
+
+You may get warnings like this:
+
+```ResourceWarning: unclosed transport```
+
+[Just ignore it](https://github.com/aio-libs/aiohttp/issues/1115).
 
 ## Requirements
 * Python >= 3.5.3

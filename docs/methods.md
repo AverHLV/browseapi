@@ -31,3 +31,27 @@ Public method for running API requests.
 * return: list of responses
 
 Pass_errors set to False by default.
+
+For `check_compatibility` method you should specify `compatibility_properties` list:
+
+```python
+from browseapi import BrowseAPI
+
+app_id = '<your_app_id>'
+cert_id = '<your_cert_id>'
+
+api = BrowseAPI(app_id, cert_id)
+
+properties = [
+    {'name': 'Year', 'value': '2016'},
+    {'name': 'Make', 'value': 'Honda'},
+    {'name': 'Model', 'value': 'Fit'},
+    {'name': 'Trim', 'value': 'EX-L Hatchback 4-Door'},
+    {'name': 'Engine', 'value': '1.5L 1497CC l4 GAS DOHC Naturally Aspirated'}
+]
+
+responses = api.execute('check_compatibility',
+                        [{'item_id': 'v1|182708228929|0', 'compatibility_properties': properties}])
+
+print(responses[0])
+```

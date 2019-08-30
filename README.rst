@@ -22,6 +22,10 @@ notation):
 
 -  `search <https://developer.ebay.com/api-docs/buy/browse/resources/item_summary/methods/search>`__
 -  `search\_by\_image <https://developer.ebay.com/api-docs/buy/browse/resources/search_by_image/methods/searchByImage>`__
+-  `get\_item <https://developer.ebay.com/api-docs/buy/browse/resources/item/methods/getItem>`__
+-  `get\_item\_by\_legacy\_id <https://developer.ebay.com/api-docs/buy/browse/resources/item/methods/getItemByLegacyId>`__
+-  `get\_items\_by\_item\_group <https://developer.ebay.com/api-docs/buy/browse/resources/item/methods/getItemsByItemGroup>`__
+-  `check\_compatibility <https://developer.ebay.com/api-docs/buy/browse/resources/item/methods/checkCompatibility>`__
 
 Quickstart
 ----------
@@ -56,6 +60,12 @@ For running tests put your ``secret.json`` file with fields
 directory, then run a command from the parent browseapi directory:
 
 ``python -m unittest browseapi.tests.test_client``
+
+You may get warnings like this:
+
+``ResourceWarning: unclosed transport``
+
+`Just ignore it. <https://github.com/aio-libs/aiohttp/issues/1115>`__
 
 Requirements
 ------------
