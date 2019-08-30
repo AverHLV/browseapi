@@ -15,6 +15,15 @@ class ClientTest(TestCase):
     def setUp(self) -> None:
         secret = self.load_json_data(SECRET_FILENAME)
         self.data = self.load_json_data(DATA_FILENAME)
+        
+        self.properties = [
+            {'name': 'Year', 'value': '2016'},
+            {'name': 'Make', 'value': 'Honda'},
+            {'name': 'Model', 'value': 'Fit'},
+            {'name': 'Trim', 'value': 'EX-L Hatchback 4-Door'},
+            {'name': 'Engine', 'value': '1.5L 1497CC l4 GAS DOHC Naturally Aspirated'}
+        ]
+        
         self.api = BrowseAPI(secret['eb_app_id'], secret['eb_cert_id'])
 
     def test_init_params(self):
@@ -30,10 +39,34 @@ class ClientTest(TestCase):
         responses = self.api.execute('search_by_image', [{'image': self.data['image']}])
         self.assert_responses(responses)
 
+    def test_get_item(self):
+        responses = self.api.execute('get_item', [{'item_id': 'v1|202117468662|0', 'fieldgroups': 'PRODUCT'}])
+        self.assert_responses(responses)
+        responses = self.api.execute('get_item', [{'item_id': 'v1|202117468662|0', 'fieldgroups': 'COMPACT'}])
+        self.assert_responses(responses)
+
+    def test_get_item_by_legacy_id(self):
+        responses = self.api.execute('get_item_by_legacy_id', [{'legacy_item_id': '262800155662'}])
+        self.assert_responses(responses)
+
+        responses = self.api.execute('get_item_by_legacy_id',
+                                     [{'legacy_item_id': '262800155662', 'fieldgroups': 'PRODUCT'}])
+
+        self.assert_responses(responses)
+
+    def test_get_items_by_item_group(self):
+        responses = self.api.execute('get_items_by_item_group', [{'item_group_id': '351825690866'}])
+        self.assert_responses(responses)
+
+    def test_check_compatibility(self):
+        responses = self.api.execute('check_compatibility',
+                                     [{'item_id': 'v1|182708228929|0', 'compatibility_properties': self.properties}])
+
+        self.assert_responses(responses)
+
     def assert_responses(self, responses):
         for response in responses:
             self.assertIsInstance(response, BrowseAPIResponse)
-            self.assertTrue(len(response.itemSummaries))
 
     @staticmethod
     def load_json_data(filename):
