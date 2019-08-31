@@ -186,23 +186,14 @@ class BrowseAPI(object):
         except client_exceptions.ClientResponseError:
             raise exceptions.BrowseAPIMimeTypeError('Response has unexpected mime type', uri)
 
-    async def _oauth(self, grant_type=0):
+    async def _oauth(self):
         """
         OAuth request
 
-        :param grant_type: integer, grant type:
-            0 - client credentials grant type
         :return: json response
         """
 
-        if not grant_type:
-            grant_type = self._credentials_grant_type
-            scope = self._scope_public_data
-
-        else:
-            raise exceptions.BrowseAPIParamError('grant_type')
-
-        data = self._encode_params(locals(), ('self',))
+        data = self._encode_params({'grant_type': self._credentials_grant_type, 'scope': self._scope_public_data})
         return await self._request(self._auth_uri, request_type=1, data=data, oauth=True)
 
     async def _search(self,
