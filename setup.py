@@ -6,14 +6,14 @@ with open('README.rst') as file:
 setup(
     name='browseapi',
     packages=['browseapi'],
-    version='0.12',
+    version='0.12.1',
     license='MIT',
     description='eBay Browse API Python client',
     long_description=long_description,
     author='Andrii Matiiash',
     author_email='andmati743@gmail.com',
     url='https://github.com/AverHLV/browseapi',
-    download_url='https://github.com/AverHLV/browseapi/archive/0.12.tar.gz',
+    download_url='https://github.com/AverHLV/browseapi/archive/0.12.1.tar.gz',
     keywords=['ASYNC', 'BROWSE API', 'CLIENT'],
 
     install_requires=[
@@ -23,7 +23,7 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
+        'Topic :: Software Development :: Libraries',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

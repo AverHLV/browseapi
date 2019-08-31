@@ -3,7 +3,7 @@ from json import loads
 
 from ..client import BrowseAPI
 from ..containers import BrowseAPIResponse
-from ..exceptions import BrowseAPIParamError
+from ..exceptions import BrowseAPIParamError, BrowseAPIRequestParamError
 
 SECRET_FILENAME = 'browseapi/tests/secret.json'
 DATA_FILENAME = 'browseapi/tests/test_data.json'
@@ -64,11 +64,16 @@ class ClientTest(TestCase):
 
         self.assert_responses(responses)
 
-    def assert_responses(self, responses):
+    def test_response_pass_errors(self):
+        responses = self.api.execute('get_items_by_item_group', [{'item_group_id': '182708228929'}], pass_errors=True)
+        self.assertIsInstance(responses[0], BrowseAPIResponse)
+        self.assertIsInstance(responses[0].errors[0], BrowseAPIRequestParamError)
+
+    def assert_responses(self, responses: list) -> None:
         for response in responses:
             self.assertIsInstance(response, BrowseAPIResponse)
 
     @staticmethod
-    def load_json_data(filename):
+    def load_json_data(filename: str) -> dict:
         with open(filename) as file:
             return loads(file.read())

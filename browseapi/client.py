@@ -375,8 +375,8 @@ class BrowseAPI(object):
                     return_exceptions=pass_errors
                 )
 
-                self._responses += [BrowseAPIResponse(response, method_name) if isinstance(response, dict) else response
-                                    for response in responses]
+                self._responses += [BrowseAPIResponse(response, method_name, pass_errors)
+                                    if isinstance(response, dict) else response for response in responses]
 
                 if part_number != len(params):
                     await self._send_oauth_request()

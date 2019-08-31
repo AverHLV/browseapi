@@ -82,6 +82,7 @@ Documentation built with `mkdocs <https://www.mkdocs.org/>`__.
 
 .. |coverage| image:: https://img.shields.io/codecov/c/github/AverHLV/browseapi.svg
 .. |build_status| image:: https://img.shields.io/gitlab/pipeline/AverHLV/browseapi/dev.svg
+   :target: https://gitlab.com/AverHLV/browseapi/pipelines
 .. |Documentation Status| image:: https://readthedocs.org/projects/browseapi/badge/?version=latest
    :target: https://browseapi.readthedocs.io/en/latest/?badge=latest
 .. |PyPI version| image:: https://badge.fury.io/py/browseapi.svg
