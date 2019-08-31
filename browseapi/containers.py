@@ -11,9 +11,19 @@ class BrowseAPIBaseContainer(object):
 class BrowseAPIResponse(BrowseAPIBaseContainer):
     """ Browse API parsed response data container """
 
-    def __init__(self, response: dict, method: str):
+    def __init__(self, response: dict, method: str, pass_errors: bool):
+        """
+        Response container initialization
+
+        :param response: parsed json response
+        :param method: called method name
+        :param pass_errors: exceptions in the response are treated the same as successful results
+        """
+
         if 'errors' in response:
-            self.parse_errors(response)
+            self.errors = []
+            self.parse_errors(response, pass_errors)
+            return
 
         if 'warnings' in response:
             self.warnings = [ErrorDetailV3(warning) for warning in response['warnings']]
@@ -145,8 +155,7 @@ class BrowseAPIResponse(BrowseAPIBaseContainer):
         else:
             self.compatibilityStatus = response.get('compatibilityStatus')
 
-    @staticmethod
-    def parse_errors(response: dict) -> None:
+    def parse_errors(self, response: dict, pass_errors: bool) -> None:
         """
         Handle all Browse API errors,
         for more information visit https://developer.ebay.com/api-docs/static/handling-error-messages.html
@@ -154,27 +163,33 @@ class BrowseAPIResponse(BrowseAPIBaseContainer):
 
         for error in response['errors']:
             if error['errorId'] in (11000, 12000):
-                raise exceptions.BrowseAPIInternalError(error)
+                exception = exceptions.BrowseAPIInternalError(error)
 
-            if error['errorId'] in (1001, 1002, 1003, 1004, 1100):
-                raise exceptions.BrowseAPIRequestOAuthError(error)
+            elif error['errorId'] in (1001, 1002, 1003, 1004, 1100):
+                exception = exceptions.BrowseAPIRequestOAuthError(error)
 
-            if error['errorId'] in (2001, 2002, 2003, 2004):
-                raise exceptions.BrowseAPIAccessError(error)
+            elif error['errorId'] in (2001, 2002, 2003, 2004):
+                exception = exceptions.BrowseAPIAccessError(error)
 
-            if error['errorId'] in (3001, 3002, 3003, 3004, 3005):
-                raise exceptions.BrowseAPIRoutingError(error)
+            elif error['errorId'] in (3001, 3002, 3003, 3004, 3005):
+                exception = exceptions.BrowseAPIRoutingError(error)
 
-            if 11001 <= error['errorId'] <= 11507 or 12001 <= error['errorId'] <= 12007 \
+            elif 11001 <= error['errorId'] <= 11507 or 12001 <= error['errorId'] <= 12007 \
                     or 12023 <= error['errorId'] <= 12506:
-                raise exceptions.BrowseAPIRequestParamError(error)
+                exception = exceptions.BrowseAPIRequestParamError(error)
 
-            if error['errorId'] in (12013, 12019):
-                raise exceptions.BrowseAPIBusinessError(error)
+            elif error['errorId'] in (12013, 12019):
+                exception = exceptions.BrowseAPIBusinessError(error)
 
-            raise exceptions.BrowseAPIError('Unhandled error, code: {0}, message: {1}'.format(
-                error['errorId'], error['message'])
-            )
+            else:
+                exception = exceptions.BrowseAPIError('Unhandled error, code: {0}, message: {1}'.format(
+                    error['errorId'], error['message'])
+                )
+
+            if not pass_errors:
+                raise exception
+
+            self.errors.append(exception)
 
 
 class Item(BrowseAPIBaseContainer):
