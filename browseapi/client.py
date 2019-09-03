@@ -4,6 +4,7 @@ from aiohttp import client_exceptions, ClientSession, ClientTimeout
 
 from base64 import b64encode
 from urllib.parse import urlencode
+from typing import Union
 
 from . import exceptions
 from .containers import BrowseAPIResponse
@@ -66,11 +67,11 @@ class BrowseAPI(object):
     def __init__(self,
                  app_id: str,
                  cert_id: str,
-                 marketplace_id='EBAY_US',
-                 partner_id=None,
-                 reference_id=None,
-                 country=None,
-                 zip_code=None):
+                 marketplace_id: str = 'EBAY_US',
+                 partner_id: str = None,
+                 reference_id: str = None,
+                 country: str = None,
+                 zip_code: str = None):
         """
         Client initialization
 
@@ -116,10 +117,10 @@ class BrowseAPI(object):
         ctx_header = ''
 
         if partner_id is not None:
-            ctx_header = 'affiliateCampaignId=' + str(partner_id)
+            ctx_header = 'affiliateCampaignId=' + partner_id
 
             if reference_id is not None:
-                ctx_header += ',affiliateReferenceId=' + str(reference_id)
+                ctx_header += ',affiliateReferenceId=' + reference_id
 
         if country is not None:
             if len(ctx_header):
@@ -138,7 +139,11 @@ class BrowseAPI(object):
 
         self._session = ClientSession(headers=self._headers, timeout=self._timeout)
 
-    async def _request(self, uri: str, request_type=0, data=None, oauth=False) -> dict:
+    async def _request(self,
+                       uri: str,
+                       request_type: int = 0,
+                       data: Union[dict, str] = None,
+                       oauth: bool = False) -> dict:
         """
         Make async request
 
@@ -146,7 +151,7 @@ class BrowseAPI(object):
         :param request_type: int, request type:
             0 - GET
             1 - POST
-        :param data: json data in dictionary for POST request or None
+        :param data: json data in dictionary for POST request or string
         :param oauth: oauth request or another request
         :return: json response
         """
@@ -197,18 +202,18 @@ class BrowseAPI(object):
         return await self._request(self._auth_uri, request_type=1, data=data, oauth=True)
 
     async def _search(self,
-                      q=None,
-                      gtin=None,
-                      charity_ids=None,
-                      fieldgroups='MATCHING_ITEMS',
-                      compatibility_filter=None,
-                      category_ids=None,
-                      filter=None,
-                      sort=None,
-                      limit=200,
-                      offset=0,
-                      aspect_filter=None,
-                      epid=None) -> dict:
+                      q: str = None,
+                      gtin: str = None,
+                      charity_ids: str = None,
+                      fieldgroups: str = 'MATCHING_ITEMS',
+                      compatibility_filter: str = None,
+                      category_ids: str = None,
+                      filter: str = None,
+                      sort: str = None,
+                      limit: int = 200,
+                      offset: int = 0,
+                      aspect_filter: str = None,
+                      epid: str = None) -> dict:
         """
         Browse API search method
 
@@ -232,13 +237,13 @@ class BrowseAPI(object):
 
     async def _search_by_image(self,
                                image: str,
-                               category_ids=None,
-                               filter=None,
-                               sort=None,
-                               limit=200,
-                               offset=0,
-                               aspect_filter=None,
-                               epid=None) -> dict:
+                               category_ids: str = None,
+                               filter: str = None,
+                               sort: str = None,
+                               limit: int = 200,
+                               offset: int = 0,
+                               aspect_filter: str = None,
+                               epid: str = None) -> dict:
         """
         Browse API searchByImage method
 
@@ -256,9 +261,7 @@ class BrowseAPI(object):
         uri = self._search_by_image_uri + self._encode_params(locals(), ('self', 'image'))
         return await self._request(uri, request_type=1, data={'image': image})
 
-    async def _get_item(self,
-                        item_id: str,
-                        fieldgroups=None) -> dict:
+    async def _get_item(self, item_id: str, fieldgroups: str = None) -> dict:
         """
         Browse API getItem method
 
@@ -272,9 +275,9 @@ class BrowseAPI(object):
 
     async def _get_item_by_legacy_id(self,
                                      legacy_item_id: str,
-                                     legacy_variation_id=None,
-                                     legacy_variation_sku=None,
-                                     fieldgroups=None) -> dict:
+                                     legacy_variation_id: str = None,
+                                     legacy_variation_sku: str = None,
+                                     fieldgroups: str = None) -> dict:
         """
         Browse API getItemByLegacyId method
 
@@ -288,8 +291,7 @@ class BrowseAPI(object):
         uri = self._get_item_by_legacy_id_uri + self._encode_params(locals(), ('self',))
         return await self._request(uri)
 
-    async def _get_items_by_item_group(self,
-                                       item_group_id: str) -> dict:
+    async def _get_items_by_item_group(self, item_group_id: str) -> dict:
         """
         Browse API getItemsByItemGroup method
 
@@ -379,7 +381,7 @@ class BrowseAPI(object):
             if self._session is not None:
                 await self._session.close()
 
-    def execute(self, method: str, params: list, pass_errors=False) -> list:
+    def execute(self, method: str, params: list, pass_errors: bool = False) -> list:
         """
         Start event loop and make requests
 
@@ -401,7 +403,7 @@ class BrowseAPI(object):
         return self._responses
 
     @staticmethod
-    def _encode_params(params: dict, to_delete=('',)) -> str:
+    def _encode_params(params: dict, to_delete: tuple = ('',)) -> str:
         """
         Encode uri parameters
 
