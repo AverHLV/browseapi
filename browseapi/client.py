@@ -4,7 +4,6 @@ from aiohttp import client_exceptions, ClientSession, ClientTimeout
 
 from base64 import b64encode
 from urllib.parse import urlencode
-from typing import Union
 
 from . import exceptions
 from .containers import BrowseAPIResponse
@@ -126,7 +125,9 @@ class BrowseAPI(object):
             if len(ctx_header):
                 ctx_header += ','
 
-            ctx_header += self._encode_params({'contextualLocation': 'country={0},zip={1}'.format(country, zip_code)})
+            ctx_header += urlencode(self._prepare_params(
+                {'contextualLocation': 'country={0},zip={1}'.format(country, zip_code)})
+            )
 
         if len(ctx_header):
             self._headers['X-EBAY-C-ENDUSERCTX'] = ctx_header
@@ -139,58 +140,6 @@ class BrowseAPI(object):
 
         self._session = ClientSession(headers=self._headers, timeout=self._timeout)
 
-    async def _request(self,
-                       uri: str,
-                       request_type: int = 0,
-                       data: Union[dict, str] = None,
-                       oauth: bool = False) -> dict:
-        """
-        Make async request
-
-        :param uri: request uri
-        :param request_type: int, request type:
-            0 - GET
-            1 - POST
-        :param data: json data in dictionary for POST request or string
-        :param oauth: oauth request or another request
-        :return: json response
-        """
-
-        try:
-            if not request_type:
-                async with self._session.get(uri) as response:
-                    return await response.json()
-
-            elif request_type == 1:
-                if oauth:
-                    async with self._oauth_session.post(uri, data=data) as response:
-                        return await response.json()
-
-                else:
-                    async with self._session.post(uri, json=data) as response:
-                        return await response.json()
-
-            else:
-                raise exceptions.BrowseAPIParamError('request_type')
-
-        except client_exceptions.InvalidURL:
-            raise exceptions.BrowseAPIInvalidUri('Invalid uri', uri)
-
-        except client_exceptions.ServerTimeoutError:
-            raise exceptions.BrowseAPITimeoutError('Timeout occurred', uri)
-
-        except client_exceptions.ClientConnectorError:
-            raise exceptions.BrowseAPIConnectionError('Connection error', uri)
-
-        except client_exceptions.ClientOSError:
-            raise exceptions.BrowseAPIConnectionError('Connection reset', uri)
-
-        except client_exceptions.ServerDisconnectedError:
-            raise exceptions.BrowseAPIConnectionError('Server refused the request', uri)
-
-        except client_exceptions.ClientResponseError:
-            raise exceptions.BrowseAPIMimeTypeError('Response has unexpected mime type', uri)
-
     async def _oauth(self):
         """
         OAuth request
@@ -198,8 +147,12 @@ class BrowseAPI(object):
         :return: json response
         """
 
-        data = self._encode_params({'grant_type': self._credentials_grant_type, 'scope': self._scope_public_data})
-        return await self._request(self._auth_uri, request_type=1, data=data, oauth=True)
+        return await self._request(
+            self._auth_uri,
+            self._oauth_session,
+            request_type='POST',
+            data=urlencode({'grant_type': self._credentials_grant_type, 'scope': self._scope_public_data})
+        )
 
     async def _search(self,
                       q: str = None,
@@ -232,8 +185,11 @@ class BrowseAPI(object):
         :return: json response
         """
 
-        uri = self._search_uri + self._encode_params(locals(), ('self',))
-        return await self._request(uri)
+        return await self._request(
+            self._search_uri,
+            self._session,
+            params=self._prepare_params(locals(), ('self',))
+        )
 
     async def _search_by_image(self,
                                image: str,
@@ -258,8 +214,13 @@ class BrowseAPI(object):
         :return: json response
         """
 
-        uri = self._search_by_image_uri + self._encode_params(locals(), ('self', 'image'))
-        return await self._request(uri, request_type=1, data={'image': image})
+        return await self._request(
+            self._search_by_image_uri,
+            self._session,
+            request_type='POST',
+            params=self._prepare_params(locals(), ('self', 'image')),
+            json_data={'image': image}
+        )
 
     async def _get_item(self, item_id: str, fieldgroups: str = None) -> dict:
         """
@@ -270,8 +231,11 @@ class BrowseAPI(object):
         :return: json response
         """
 
-        uri = self._get_item_uri.format(item_id=item_id) + self._encode_params(locals(), ('self', 'item_id'))
-        return await self._request(uri)
+        return await self._request(
+            self._get_item_uri.format(item_id=item_id),
+            self._session,
+            params=self._prepare_params(locals(), ('self', 'item_id'))
+        )
 
     async def _get_item_by_legacy_id(self,
                                      legacy_item_id: str,
@@ -288,8 +252,11 @@ class BrowseAPI(object):
         :return: json response
         """
 
-        uri = self._get_item_by_legacy_id_uri + self._encode_params(locals(), ('self',))
-        return await self._request(uri)
+        return await self._request(
+            self._get_item_by_legacy_id_uri,
+            self._session,
+            params=self._prepare_params(locals(), ('self',))
+        )
 
     async def _get_items_by_item_group(self, item_group_id: str) -> dict:
         """
@@ -299,8 +266,11 @@ class BrowseAPI(object):
         :return: json response
         """
 
-        uri = self._get_items_by_item_group_uri + self._encode_params(locals(), ('self',))
-        return await self._request(uri)
+        return await self._request(
+            self._get_items_by_item_group_uri,
+            self._session,
+            params=self._prepare_params(locals(), ('self',))
+        )
 
     async def _check_compatibility(self,
                                    item_id: str,
@@ -314,8 +284,12 @@ class BrowseAPI(object):
         :return: json response
         """
 
-        uri = self._check_compatibility_uri.format(item_id=item_id)
-        return await self._request(uri, request_type=1, data={'compatibilityProperties': compatibility_properties})
+        return await self._request(
+            self._check_compatibility_uri.format(item_id=item_id),
+            self._session,
+            request_type='POST',
+            json_data={'compatibilityProperties': compatibility_properties}
+        )
 
     async def _send_oauth_request(self):
         """ Send OAuth request for getting application token """
@@ -403,18 +377,67 @@ class BrowseAPI(object):
         return self._responses
 
     @staticmethod
-    def _encode_params(params: dict, to_delete: tuple = ('',)) -> str:
+    async def _request(uri: str,
+                       session: ClientSession,
+                       request_type: str = 'GET',
+                       params: dict = None,
+                       data: str = None,
+                       json_data: dict = None) -> dict:
         """
-        Encode uri parameters
+        Make async request
+
+        :param uri: request uri
+        :param session: Client session instance
+        :param request_type: GET or POST
+        :param params: request parameters dictionary
+        :param data: str with request payload
+        :param json_data: dictionary with request payload
+        :return: json response
+        """
+
+        try:
+            if request_type == 'GET':
+                async with session.get(uri, params=params) as response:
+                    return await response.json()
+
+            elif request_type == 'POST':
+                async with session.post(uri, params=params, data=data, json=json_data) as response:
+                    return await response.json()
+
+            else:
+                raise exceptions.BrowseAPIParamError('request_type')
+
+        except client_exceptions.InvalidURL:
+            raise exceptions.BrowseAPIInvalidUri('Invalid uri', uri)
+
+        except client_exceptions.ServerTimeoutError:
+            raise exceptions.BrowseAPITimeoutError('Timeout occurred', uri)
+
+        except client_exceptions.ClientConnectorError:
+            raise exceptions.BrowseAPIConnectionError('Connection error', uri)
+
+        except client_exceptions.ClientOSError:
+            raise exceptions.BrowseAPIConnectionError('Connection reset', uri)
+
+        except client_exceptions.ServerDisconnectedError:
+            raise exceptions.BrowseAPIConnectionError('Server refused the request', uri)
+
+        except client_exceptions.ClientResponseError:
+            raise exceptions.BrowseAPIMimeTypeError('Response has unexpected mime type', uri)
+
+    @staticmethod
+    def _prepare_params(params: dict, to_delete: tuple = ('',)) -> dict:
+        """
+        Prepare uri parameters
 
         :param params: request parameters dictionary
         :param to_delete: iterable, what params needs to be deleted
-        :return: string with encoded parameters
+        :return: parameters dictionary or string with encoded parameters
         """
 
-        return urlencode({
+        return {
             param: str(params[param]) for param in params if params[param] is not None and param not in to_delete
-        })
+        }
 
     @staticmethod
     def _split_list(array: list, n: int):
